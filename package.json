@@ -1,0 +1,56 @@
+{
+  "name": "@c2corg/fit-parser-extract-geometry",
+  "version": "1.0.0",
+  "description": "Basic FIT parser that only focuses on extracting geometry from activities",
+  "type": "commonjs",
+  "main": "bin/index.js",
+  "types": "bin/index.d.ts",
+  "files": [
+    "bin/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --fix src/ test/",
+    "lint:ci": "eslint src/ test/ -f junit -o ./reports/junit/eslint-results.xml",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "import-sdk-profile": "ts-node src/import-sdk-profile.ts",
+    "prepare": "husky install",
+    "preversion": "npm run build && npm run lint && npm run test",
+    "prepublish": "npm run build && npm run lint && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/c2corg/fit-parser-extract-geometry.git"
+  },
+  "keywords": [
+    "fit"
+  ],
+  "author": "Camptocamp community <dev@camptocamp.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/c2corg/fit-parser-extract-geometry/issues",
+    "email": "dev@camptocamp.org"
+  },
+  "homepage": "https://github.com/c2corg/fit-parser-extract-geometry#readme",
+  "devDependencies": {
+    "@tsconfig/node18-strictest": "1.0.0",
+    "@types/debug": "4.1.7",
+    "@types/jest": "29.2.0",
+    "@types/node": "18.11.0",
+    "@typescript-eslint/eslint-plugin": "5.40.1",
+    "@typescript-eslint/parser": "5.40.1",
+    "debug": "4.3.4",
+    "eslint": "8.25.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-security": "1.5.0",
+    "husky": "8.0.1",
+    "jest": "29.2.0",
+    "jest-junit": "14.0.1",
+    "lint-staged": "13.0.3",
+    "prettier": "2.7.1",
+    "ts-jest": "29.0.3",
+    "ts-node": "10.9.1",
+    "typescript": "4.8.4"
+  }
+}

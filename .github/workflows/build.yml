@@ -1,0 +1,41 @@
+name: Continuous integration
+
+on:
+  pull_request:
+    branches:
+      - '**'
+  push:
+    branches: [main]
+    tags:
+      - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        node-version: ['18.x']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: npm install, lint and build
+        run: |
+          npm ci
+          npm run lint:ci
+          npm run build
+      - name: Run the tests
+        run: npm run test
+      - name: Send coverage to codacy
+        # secrets are not available for PR from forks, and dependabot PRs
+        if: ${{ github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: reports/coverage/lcov.info
