@@ -13,14 +13,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Create or update release
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
   publish-npm:
+    needs: create-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,6 +32,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: 'https://registry.npmjs.org'
+      - name: Checkout code
+        uses: actions/checkout@v4
       - run: npm ci
       - run: npm publish
         env:
