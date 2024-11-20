@@ -1,5 +1,0 @@
-reports/
-node_modules/
-bin/
-*.sh
-.eslintrc.cjs
