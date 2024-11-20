@@ -1,6 +1,6 @@
 {
   "name": "@c2corg/fit-parser-extract-geometry",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Basic FIT parser that only focuses on extracting geometry from activities",
   "type": "commonjs",
   "main": "bin/index.js",
