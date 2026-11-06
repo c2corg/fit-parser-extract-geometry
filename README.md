@@ -19,9 +19,13 @@ const bytes = [0x0e, 0x10, 0xd9, 0x07, 0x00, 0x00, 0x00, 0x00, 0x2e, 0x46, 0x49,
 const geometry = extractGeometry(new Uint8Array(bytes));
 ```
 
-When an error is encountered, the parser stops silently and returns the coordinates already processed. Set `DEBUG` environment variable to `fit-parser-extract-geometry` to enable error messages (in a browser, set `localStorage.debug` instead, [more info](https://github.com/debug-js/debug)).
+When an error is encountered, the parser stops silently and returns the
+coordinates already processed. Set `DEBUG` environment variable to
+`fit-parser-extract-geometry` to enable error messages (in a browser, set
+`localStorage.debug` instead, [more info](https://github.com/debug-js/debug)).
 
-The package ships both ES module and CommonJS builds, and works in Node.js (>= 20.19) and browsers.
+The package ships both ES module and CommonJS builds, and works in Node.js
+(>= 20.19) and browsers.
 
 ## Development
 
