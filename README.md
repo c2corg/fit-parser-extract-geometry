@@ -1,8 +1,24 @@
 # fit-parser-extract-geometry
 
-[![GitHub license](https://img.shields.io/github/license/c2corg/fit-parser-extract-geometry.svg)](https://github.com/c2corg/fit-parser-extract-geometry/blob/main/LICENSE) ![Continuous integration](https://github.com/c2corg/fit-parser-extract-geometry/workflows/Continuous%20integration/badge.svg?branch=main) ![Github Code scanning](https://github.com/c2corg/fit-parser-extract-geometry/workflows/Github%20Code%20scanning/badge.svg?branch=main) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/937c8b91d70d4e03bb372a9b029ce166)](https://www.codacy.com/gh/c2corg/fit-parser-extract-geometry/dashboard?utm_source=github.com&utm_medium=referral&utm_content=c2corg/fit-parser-extract-geometry&utm_campaign=Badge_Grade) [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/937c8b91d70d4e03bb372a9b029ce166)](https://www.codacy.com/gh/c2corg/fit-parser-extract-geometry/dashboard?utm_source=github.com&utm_medium=referral&utm_content=c2corg/fit-parser-extract-geometry&utm_campaign=Badge_Coverage)
+[![npm](https://img.shields.io/npm/v/@c2corg/fit-parser-extract-geometry)](https://www.npmjs.com/package/@c2corg/fit-parser-extract-geometry)
+[![Continuous integration](https://github.com/c2corg/fit-parser-extract-geometry/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/c2corg/fit-parser-extract-geometry/actions/workflows/build.yml)
+[![Code scanning](https://github.com/c2corg/fit-parser-extract-geometry/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/c2corg/fit-parser-extract-geometry/actions/workflows/codeql-analysis.yml)
+[![Codacy grade](https://app.codacy.com/project/badge/Grade/937c8b91d70d4e03bb372a9b029ce166)](https://app.codacy.com/gh/c2corg/fit-parser-extract-geometry/dashboard)
+[![Codacy coverage](https://app.codacy.com/project/badge/Coverage/937c8b91d70d4e03bb372a9b029ce166)](https://app.codacy.com/gh/c2corg/fit-parser-extract-geometry/dashboard)
+[![License](https://img.shields.io/github/license/c2corg/fit-parser-extract-geometry)](LICENSE)
 
-Basic FIT parser that only focuses on extracting geometry from activities
+Small, dependency-light parser that extracts the track of a
+[FIT](https://developer.garmin.com/fit/protocol/) activity file (Garmin, Coros,
+Suunto, Wahoo…) as a list of `[longitude, latitude, altitude, time]` points.
+
+It only reads what a track needs: `record` messages with their position,
+altitude and timestamp. Everything else (sessions, laps, heart rate, developer
+fields…) is skipped. To decode whole FIT files, use the
+[Garmin FIT SDK](https://github.com/garmin/fit-javascript-sdk) instead.
+
+It is used by [camptocamp.org](https://www.camptocamp.org) to display FIT files
+on maps ([c2c_ui](https://github.com/c2corg/c2c_ui)) and to import activities
+from tracking services ([c2c_tracking](https://github.com/c2corg/c2c_tracking)).
 
 ## Installation
 
@@ -10,43 +26,118 @@ Basic FIT parser that only focuses on extracting geometry from activities
 npm install @c2corg/fit-parser-extract-geometry
 ```
 
+The package ships ES module and CommonJS builds, with TypeScript types. It runs
+in Node.js >= 20.19 and in browsers.
+
 ## Usage
+
+In Node.js:
+
+```ts
+import { readFile } from 'node:fs/promises';
+
+import { extractGeometry } from '@c2corg/fit-parser-extract-geometry';
+
+const geometry = extractGeometry(await readFile('activity.fit'));
+```
+
+In a browser, from a file input or a download:
 
 ```ts
 import { extractGeometry } from '@c2corg/fit-parser-extract-geometry';
 
-const bytes = [0x0e, 0x10, 0xd9, 0x07, 0x00, 0x00, 0x00, 0x00, 0x2e, 0x46, 0x49, 0x54, 0x91, 0x33, 0x00, 0x00];
-const geometry = extractGeometry(new Uint8Array(bytes));
+const response = await fetch('activity.fit');
+const geometry = extractGeometry(new Uint8Array(await response.arrayBuffer()));
 ```
 
-`extractGeometry` returns one `[longitude, latitude, altitude, time]` point
-per `record` message with a position:
+As a GeoJSON geometry:
 
-- longitude and latitude in degrees (WGS 84)
-- altitude in meters, from `enhanced_altitude` or else `altitude`. A record
-  without altitude takes the previous known one, leading records the first
-  known one, and 0 when the file has none
-- time in seconds since the Unix epoch, 0 when unknown
+```ts
+const lineString = { type: 'LineString', coordinates: extractGeometry(bytes) };
+```
+
+## API
+
+### `extractGeometry(blob: Uint8Array): Point[]`
+
+Returns one point per `record` message with a position, in file order. Any
+`Uint8Array` works, including a Node.js `Buffer` or a view on a larger buffer.
+
+### `Point`
+
+```ts
+type Point = [longitude: number, latitude: number, altitude: number, time: number];
+```
+
+- `longitude` and `latitude`: degrees (WGS 84).
+- `altitude`: meters, from `enhanced_altitude`, else from `altitude`. A record
+  without altitude takes the previous known one. Leading records take the
+  first known one, and all records get 0 when the file has no altitude.
+- `time`: seconds since the Unix epoch, from the record timestamp or its
+  compressed timestamp header. 0 when unknown.
 
 Records at exactly (0, 0) are skipped, as some devices write them without GPS
-fix.
+fix. So are positions out of range, which only corrupted data can contain.
 
-When an error is encountered, the parser stops silently and returns the
-coordinates already processed. Set `DEBUG` environment variable to
-`fit-parser-extract-geometry` to enable error messages (in a browser, set
-`localStorage.debug` instead, [more info](https://github.com/debug-js/debug)).
+### Errors
 
-The package ships both ES module and CommonJS builds, and works in Node.js
-(>= 20.19) and browsers.
+`extractGeometry` throws only when the input is too small to contain a FIT
+header (less than 12 bytes).
+
+It returns an empty array when the header is not a FIT header. When the data
+is corrupted or truncated, it stops silently and returns the points read so
+far.
+
+To log why parsing stopped, enable the `fit-parser-extract-geometry` namespace
+of [debug](https://github.com/debug-js/debug):
+
+```sh
+DEBUG=fit-parser-extract-geometry node app.js
+```
+
+In a browser, run `localStorage.debug = 'fit-parser-extract-geometry'` in the
+console, then reload the page.
+
+### Limits
+
+- File and header CRCs are not checked.
+- Only the first FIT file of a chained FIT file is read.
+- Files with a data size of 0 in their header, as written by some unfinished
+  recordings, return an empty array.
 
 ## Development
 
 ```sh
 npm ci
-npm test               # run the tests with Vitest
-npm run test:coverage  # same, with a coverage report in reports/coverage
+npm test               # tests, with Vitest
+npm run test:coverage  # tests, with a coverage report in reports/coverage
 npm run lint           # ESLint, with fixes
+npm run format         # Prettier
 npm run typecheck      # tsc --noEmit
 npm run build          # build dist/ with tsdown
-npm run check:package  # build, then validate the package with publint and arethetypeswrong
+npm run check:package  # build, then check with publint and arethetypeswrong
 ```
+
+Tests craft FIT files for edge cases with `test/support/fit-builder.ts`, and
+read the sample files in `samples/`. Coverage must stay at 100%.
+
+## Release
+
+Bump the version and push the tag:
+
+```sh
+npm version minor  # or patch, major
+git push --follow-tags
+```
+
+The `v*` tag triggers the release workflow: it creates the GitHub release with
+generated notes, then publishes the package to npm with provenance.
+
+## Credits
+
+The parser was first inspired by [backfit](https://github.com/backfit/backfit),
+under MIT license.
+
+## License
+
+[MIT](LICENSE)
