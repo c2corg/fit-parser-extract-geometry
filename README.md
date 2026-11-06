@@ -65,8 +65,14 @@ Returns one point per `record` message with a position, in file order. Any
 
 ### `Point`
 
+<!-- prettier-ignore -->
 ```ts
-type Point = [longitude: number, latitude: number, altitude: number, time: number];
+type Point = [
+  longitude: number,
+  latitude: number,
+  altitude: number,
+  time: number,
+];
 ```
 
 - `longitude` and `latitude`: degrees (WGS 84).
