@@ -3,10 +3,12 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Jest Unit Tests",
-      "runtimeArgs": ["--inspect-brk", "${workspaceRoot}/node_modules/jest/bin/jest", "--runInBand"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
+      "name": "Debug Vitest tests",
+      "autoAttachChildProcesses": true,
+      "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "--no-file-parallelism"],
+      "smartStep": true,
+      "console": "integratedTerminal"
     }
   ]
 }
