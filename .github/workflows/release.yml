@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # npm provenance
+      id-token: write # npm trusted publishing (OIDC), no token needed
     strategy:
       matrix:
         node-version: [lts/*]
@@ -36,6 +36,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
       - run: npm ci
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+      # Trusted publisher configured on npmjs.com for this repository and workflow
+      # (https://docs.npmjs.com/trusted-publishers), provenance is generated automatically
+      - run: npm publish --access public
