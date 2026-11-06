@@ -4,12 +4,16 @@
 
 import debug from 'debug';
 
-type MessageType = { globalMessageNumber: number; littleEndian: boolean; fieldDefinitions: FieldDefinition[] };
+interface MessageType {
+  globalMessageNumber: number;
+  littleEndian: boolean;
+  fieldDefinitions: FieldDefinition[];
+}
 
-type DeveloperFieldDefinition = {
+interface DeveloperFieldDefinition {
   size: number;
   isDeveloperField: true;
-};
+}
 
 type FieldDefinition =
   | {
@@ -20,11 +24,11 @@ type FieldDefinition =
     }
   | DeveloperFieldDefinition;
 
-type RecordMessage = {
+interface RecordMessage {
   messageType: 'record';
   nextIndex: number;
   message: RecordValues;
-};
+}
 
 type Message =
   | {
@@ -33,7 +37,12 @@ type Message =
     }
   | RecordMessage;
 
-type RecordValues = { timestamp?: Date; longitude?: number; latitude?: number; altitude?: number };
+interface RecordValues {
+  timestamp?: Date;
+  longitude?: number;
+  latitude?: number;
+  altitude?: number;
+}
 
 const log = debug(`fit-parser-extract-geometry`);
 
@@ -49,7 +58,7 @@ const invariant = <T>(value: T): NonNullable<T> => {
 };
 
 const isDeveloperFieldDefinition = (def: FieldDefinition): def is DeveloperFieldDefinition =>
-  'isDeveloperField' in def && def.isDeveloperField === true;
+  'isDeveloperField' in def && def.isDeveloperField;
 
 const isRecordMessage = (message: Message): message is RecordMessage => message.messageType === 'record';
 
@@ -161,8 +170,7 @@ class FIT {
 
   private readTimestamp(blob: Uint8Array, startIndex: number, fieldDefinitions: FieldDefinition[]): number | null {
     let readDataFromIndex = startIndex + 1;
-    for (let i = 0; i < fieldDefinitions.length; i++) {
-      const def = invariant(fieldDefinitions[i]);
+    for (const def of fieldDefinitions) {
       if (isDeveloperFieldDefinition(def)) {
         // we won't find a timestamp field later on
         return null;
@@ -323,8 +331,7 @@ class FIT {
       fields.timestamp = new Date(this.timestamp * 1000 + GARMIN_TIME_OFFSET);
     }
 
-    for (let i = 0; i < fieldDefinitions.length; i++) {
-      const def = invariant(fieldDefinitions[i]);
+    for (const def of fieldDefinitions) {
       if (isDeveloperFieldDefinition(def)) {
         // We don't care about dev-specific data
         messageSize += def.size;
@@ -411,7 +418,7 @@ class FIT {
 
     // Some basic checks. Note that we don't try to check file or header CRC
     if (headerSize !== 14 && headerSize !== 12) {
-      log(`Incorrect FIT header size: ${headerSize}`);
+      log(`Incorrect FIT header size: ${String(headerSize)}`);
       return [];
     }
 

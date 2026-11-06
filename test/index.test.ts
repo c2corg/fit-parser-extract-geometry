@@ -1,9 +1,11 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-import { extractGeometry } from '../src';
+import { describe, expect, it } from 'vitest';
 
-const samplesDir = resolve(__dirname, '../samples');
+import { extractGeometry } from '../src/index.ts';
+
+const samplesDir = resolve(import.meta.dirname, '../samples');
 
 describe('FIT', () => {
   describe.each([
@@ -23,7 +25,7 @@ describe('FIT', () => {
     'WorkoutIndividualSteps',
     'WorkoutRepeatGreaterThanStep',
     'WorkoutRepeatSteps',
-  ])('loads FIT file', (name) => {
+  ])('loads FIT file %s', (name) => {
     it('expects an empty geometry', () => {
       // each of these files have either no record, or insufficient data (e.g. no coordinates)
       // but it shoud not fail...

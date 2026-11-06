@@ -1,3 +1,4 @@
 node_modules/
 reports/
-bin/
+dist/
+package-lock.json

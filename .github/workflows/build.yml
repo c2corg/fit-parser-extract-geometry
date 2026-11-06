@@ -16,25 +16,30 @@ jobs:
       contents: read
     strategy:
       matrix:
-        node-version: [lts/*]
+        node-version: [22, 24]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - name: npm install, lint and build
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
         run: |
-          npm ci
           npm run lint:ci
-          npm run build
+          npm run format:check
+      - name: Type check
+        run: npm run typecheck
+      - name: Build and check the package
+        run: npm run check:package
       - name: Run the tests
-        run: npm run test
+        run: npm run test:coverage
       - name: Send coverage to codacy
         # secrets are not available for PR from forks, and dependabot PRs
-        if: ${{ github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' }}
+        if: ${{ matrix.node-version == 24 && github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' }}
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
