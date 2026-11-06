@@ -8,6 +8,7 @@
     "types": ["node"],
     "noEmit": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": true
   },
   "include": ["src", "test", "*.config.ts"]

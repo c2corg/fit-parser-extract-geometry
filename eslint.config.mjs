@@ -35,6 +35,7 @@ export default defineConfig(
       ...vitest.configs.recommended.rules,
       // tests read sample files from computed paths
       'security/detect-non-literal-fs-filename': 'off',
+      'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'expectPoint'] }],
     },
   },
   prettier,

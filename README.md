@@ -19,6 +19,18 @@ const bytes = [0x0e, 0x10, 0xd9, 0x07, 0x00, 0x00, 0x00, 0x00, 0x2e, 0x46, 0x49,
 const geometry = extractGeometry(new Uint8Array(bytes));
 ```
 
+`extractGeometry` returns one `[longitude, latitude, altitude, time]` point
+per `record` message with a position:
+
+- longitude and latitude in degrees (WGS 84)
+- altitude in meters, from `enhanced_altitude` or else `altitude`. A record
+  without altitude takes the previous known one, leading records the first
+  known one, and 0 when the file has none
+- time in seconds since the Unix epoch, 0 when unknown
+
+Records at exactly (0, 0) are skipped, as some devices write them without GPS
+fix.
+
 When an error is encountered, the parser stops silently and returns the
 coordinates already processed. Set `DEBUG` environment variable to
 `fit-parser-extract-geometry` to enable error messages (in a browser, set
